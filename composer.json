@@ -56,6 +56,11 @@
         "symfony/cache": "Provides cache support for Setup Tool with doctrine/cache 2.0",
         "symfony/yaml": "If you want to use YAML Metadata Mapping Driver"
     },
+    "extra": {
+        "branch-alias": {
+            "dev-production/cafevdb": "2.8.x-dev"
+        }
+    },
     "autoload": {
         "psr-4": { "Doctrine\\ORM\\": "lib/Doctrine/ORM" }
     },
