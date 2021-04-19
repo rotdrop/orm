@@ -702,9 +702,19 @@ class BasicEntityPersister implements EntityPersister
 
                 $this->quotedColumns[$sourceColumn]  = $quotedColumn;
                 $this->columnTypes[$sourceColumn]    = PersisterHelper::getTypeOfColumn($targetColumn, $targetClass, $this->em);
-                $result[$owningTable][$sourceColumn] = $newValId
+
+                $newColumnValue = $newValId
                     ? $newValId[$targetClass->getFieldForColumn($targetColumn)]
-                    : null;
+                                : null;
+
+                if ($result[$owningTable][$sourceColumn] === null) {
+                    $result[$owningTable][$sourceColumn] = $newColumnValue;
+                } else if ($newColumnValue !== null && $newColumnValue !== $result[$owningTable][$sourceColumn]) {
+                    throw new ORMException(sprintf('Value "%s" for column "%s.%s", conflicts value "%s" already set.',
+                                                   $newColumnValue,
+                                                   $owningTable, $sourceColumn,
+                                                   $result[$owningTable][$sourceColumn]));
+                }
             }
         }
 
