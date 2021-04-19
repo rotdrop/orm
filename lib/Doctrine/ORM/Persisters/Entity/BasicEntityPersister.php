@@ -16,6 +16,7 @@ use Doctrine\DBAL\Types\Type;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\Deprecations\Deprecation;
 use Doctrine\ORM\EntityManagerInterface;
+use Doctrine\ORM\Exception\ORMException;
 use Doctrine\ORM\Mapping\ClassMetadata;
 use Doctrine\ORM\Mapping\MappingException;
 use Doctrine\ORM\Mapping\QuoteStrategy;
@@ -626,6 +627,7 @@ class BasicEntityPersister implements EntityPersister
      */
     protected function prepareUpdateData($entity, bool $isInsert = false)
     {
+        $joinColumnUsage = null;
         $versionField = null;
         $result       = [];
         $uow          = $this->em->getUnitOfWork();
@@ -697,13 +699,46 @@ class BasicEntityPersister implements EntityPersister
             foreach ($assoc['joinColumns'] as $joinColumn) {
                 $sourceColumn = $joinColumn['name'];
                 $targetColumn = $joinColumn['referencedColumnName'];
+
+                $newColumnValue = $newValId
+                    ? $newValId[$targetClass->getFieldForColumn($targetColumn)]
+                    : null;
+
+                if (!isset($joinColumnUsage[$sourceColumn])) {
+                    $joinColumnUsage[$sourceColumn] = 0;
+                    foreach ($this->class->associationMappings as $otherFieldName => $mapping) {
+                        if ($otherFieldName === $field) {
+                            $joinColumnUsage[$sourceColumn] += !empty($newVal);
+                        } else {
+                            foreach (($mapping['joinColumns'] ?? []) as $otherJoinColumn) {
+                                if ($otherJoinColumn['name'] === $sourceColumn) {
+                                    $joinColumnUsage[$sourceColumn] += !empty($this->class->getFieldValue($entity, $otherFieldName));
+                                }
+                            }
+                        }
+                    }
+                }
+
+                if (empty($newColumnValue) && $joinColumnUsage[$sourceColumn] > 0) {
+                    continue; // still in use, avoid overwriting it
+                }
+
+                if (!empty($result[$owningTable][$sourceColumn])) {
+                  if ($newColumnValue !== null && $newColumnValue != $result[$owningTable][$sourceColumn]) {
+                    throw new ORMException(sprintf('Value "%s" for column "%s.%s", conflicts value "%s" already set.',
+                                                   $newColumnValue,
+                                                   $owningTable, $sourceColumn,
+                                                   $result[$owningTable][$sourceColumn]));
+                  }
+                  continue;
+                }
+
+                $result[$owningTable][$sourceColumn] = $newColumnValue;
+
                 $quotedColumn = $this->quoteStrategy->getJoinColumnName($joinColumn, $this->class, $this->platform);
 
                 $this->quotedColumns[$sourceColumn]  = $quotedColumn;
                 $this->columnTypes[$sourceColumn]    = PersisterHelper::getTypeOfColumn($targetColumn, $targetClass, $this->em);
-                $result[$owningTable][$sourceColumn] = $newValId
-                    ? $newValId[$targetClass->getFieldForColumn($targetColumn)]
-                    : null;
             }
         }
 
