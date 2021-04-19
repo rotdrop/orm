@@ -741,6 +741,7 @@ class SchemaTool
                 }
 
                 $columnOptions += $this->gatherColumnOptions($fieldMapping);
+                unset($columnOptions['default']);
 
                 if (isset($fieldMapping['length'])) {
                     $columnOptions['length'] = $fieldMapping['length'];
