@@ -666,23 +666,27 @@ class BasicEntityPersister implements EntityPersister
             foreach ($assoc['joinColumns'] as $joinColumn) {
                 $sourceColumn = $joinColumn['name'];
                 $targetColumn = $joinColumn['referencedColumnName'];
-                $quotedColumn = $this->quoteStrategy->getJoinColumnName($joinColumn, $this->class, $this->platform);
-
-                $this->quotedColumns[$sourceColumn]  = $quotedColumn;
-                $this->columnTypes[$sourceColumn]    = PersisterHelper::getTypeOfColumn($targetColumn, $targetClass, $this->em);
 
                 $newColumnValue = $newValId
                     ? $newValId[$targetClass->getFieldForColumn($targetColumn)]
                                 : null;
 
-                if ($result[$owningTable][$sourceColumn] === null) {
-                    $result[$owningTable][$sourceColumn] = $newColumnValue;
-                } else if ($newColumnValue !== null && $newColumnValue !== $result[$owningTable][$sourceColumn]) {
+                if ($result[$owningTable][$sourceColumn] !== null) {
+                  if ($newColumnValue !== null && $newColumnValue != $result[$owningTable][$sourceColumn]) {
                     throw new ORMException(sprintf('Value "%s" for column "%s.%s", conflicts value "%s" already set.',
                                                    $newColumnValue,
                                                    $owningTable, $sourceColumn,
                                                    $result[$owningTable][$sourceColumn]));
+                  }
+                  continue;
                 }
+
+                $result[$owningTable][$sourceColumn] = $newColumnValue;
+
+                $quotedColumn = $this->quoteStrategy->getJoinColumnName($joinColumn, $this->class, $this->platform);
+
+                $this->quotedColumns[$sourceColumn]  = $quotedColumn;
+                $this->columnTypes[$sourceColumn]    = PersisterHelper::getTypeOfColumn($targetColumn, $targetClass, $this->em);
             }
         }
 
