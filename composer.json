@@ -58,7 +58,7 @@
     },
     "extra": {
         "branch-alias": {
-            "dev-production/cafevdb": "2.8.x-dev"
+            "dev-production/2.11.x/cafevdb": "2.11.x-dev"
         }
     },
     "autoload": {
