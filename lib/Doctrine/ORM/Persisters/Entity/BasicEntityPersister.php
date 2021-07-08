@@ -671,7 +671,7 @@ class BasicEntityPersister implements EntityPersister
                     ? $newValId[$targetClass->getFieldForColumn($targetColumn)]
                                 : null;
 
-                if ($result[$owningTable][$sourceColumn] !== null) {
+                if (isset($result[$owningTable][$sourceColumn]) && $result[$owningTable][$sourceColumn] !== null) {
                   if ($newColumnValue !== null && $newColumnValue != $result[$owningTable][$sourceColumn]) {
                     throw new ORMException(sprintf('Value "%s" for column "%s.%s", conflicts value "%s" already set.',
                                                    $newColumnValue,
