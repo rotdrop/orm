@@ -1506,6 +1506,7 @@ class BasicEntityPersister implements EntityPersister
     protected function getInsertColumnList(): array
     {
         $columns = [];
+        $autoColumn = $this->class->isIdGeneratorIdentity() ? $this->class->identifier[0] : '';
 
         foreach ($this->class->propertyAccessors as $name => $field) {
             if ($this->class->isVersioned && $this->class->versionField === $name) {
@@ -1521,14 +1522,16 @@ class BasicEntityPersister implements EntityPersister
 
                 if ($assoc->isToOneOwningSide()) {
                     foreach ($assoc->joinColumns as $joinColumn) {
-                        $columns[] = $this->quoteStrategy->getJoinColumnName($joinColumn, $this->class, $this->platform);
+                        if ($autoColumn !== $joinColumn['name']) {
+                            $columns[] = $this->quoteStrategy->getJoinColumnName($joinColumn, $this->class, $this->platform);
+                        }
                     }
                 }
 
                 continue;
             }
 
-            if (! $this->class->isIdGeneratorIdentity() || $this->class->identifier[0] !== $name) {
+            if ($autoColumn !== $name) {
                 if (isset($this->class->fieldMappings[$name]->notInsertable)) {
                     continue;
                 }
