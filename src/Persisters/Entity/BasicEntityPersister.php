@@ -594,6 +594,7 @@ class BasicEntityPersister implements EntityPersister
     protected function prepareUpdateData(object $entity, bool $isInsert = false): array
     {
         $joinColumnUsage = null;
+        $idColumns    = null;
         $versionField = null;
         $result       = [];
         $uow          = $this->em->getUnitOfWork();
@@ -710,6 +711,20 @@ class BasicEntityPersister implements EntityPersister
 
                 if (empty($newColumnValue) && $joinColumnUsage[$sourceColumn] > 0) {
                     continue; // still in use, avoid overwriting it
+                }
+
+                if (empty($idColumns)) {
+                    $idColumns = $this->class->getIdentifierColumnNames();
+                }
+
+                if (array_search($sourceColumn, $idColumns) !== false) {
+                  // Remove the identifier column from the update if
+                  // this is just an attempt to set the association to
+                  // null. Still it is not a good idea to change an
+                  // identifier value with an update statement ...
+                  if (empty($newValId)) {
+                    continue;
+                  }
                 }
 
                 if (!empty($result[$owningTable][$sourceColumn])) {
