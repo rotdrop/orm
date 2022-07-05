@@ -47,19 +47,25 @@ final class IdentifierFlattener
         $flatId = [];
 
         foreach ($class->identifier as $field) {
-            if (isset($class->associationMappings[$field]) && isset($id[$field]) && is_a($id[$field], $class->associationMappings[$field]->targetEntity)) {
-                $targetClassMetadata = $this->metadataFactory->getMetadataFor(
-                    $class->associationMappings[$field]->targetEntity,
-                );
-                assert($targetClassMetadata instanceof ClassMetadata);
+            if (isset($class->associationMappings[$field]) && isset($id[$field])) {
+                $targetEntity = $class->associationMappings[$field]['targetEntity'];
+                $fieldValue = $id[$field];
+                if (is_object($fieldValue) && $fieldValue instanceof $targetEntity) {
+                    $targetClassMetadata = $this->metadataFactory->getMetadataFor($targetEntity);
+                    assert($targetClassMetadata instanceof ClassMetadata);
 
-                if ($this->unitOfWork->isInIdentityMap($id[$field])) {
-                    $associatedId = $this->flattenIdentifier($targetClassMetadata, $this->unitOfWork->getEntityIdentifier($id[$field]));
+                    if ($this->unitOfWork->isInIdentityMap($id[$field])) {
+                        $associatedId = $this->flattenIdentifier($targetClassMetadata, $this->unitOfWork->getEntityIdentifier($id[$field]));
+                    } else {
+                        $associatedId = $this->flattenIdentifier($targetClassMetadata, $targetClassMetadata->getIdentifierValues($id[$field]));
+                    }
+
+                    $flatId[$field] = implode(' ', $associatedId);
                 } else {
-                    $associatedId = $this->flattenIdentifier($targetClassMetadata, $targetClassMetadata->getIdentifierValues($id[$field]));
+                    // assume that then $id[$field] is the single identifier
+                    assert(count($class->associationMappings[$field]['joinColumns']) == 1);
+                    $flatId[$field] = $fieldValue;
                 }
-
-                $flatId[$field] = implode(' ', $associatedId);
             } elseif (isset($class->associationMappings[$field])) {
                 assert($class->associationMappings[$field]->isToOneOwningSide());
                 $associatedId = [];
@@ -69,7 +75,7 @@ final class IdentifierFlattener
                 }
 
                 $flatId[$field] = implode(' ', $associatedId);
-            } else {
+            } else if (isset($id[$field])) {
                 if ($id[$field] instanceof BackedEnum) {
                     $flatId[$field] = $id[$field]->value;
                 } else {
