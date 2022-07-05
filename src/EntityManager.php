@@ -26,6 +26,8 @@ use Doctrine\ORM\Query\Expr;
 use Doctrine\ORM\Query\FilterCollection;
 use Doctrine\ORM\Query\ResultSetMapping;
 use Doctrine\ORM\Repository\RepositoryFactory;
+use Doctrine\ORM\Utility\IdentifierFlattener;
+use Throwable;
 
 use function array_keys;
 use function is_array;
@@ -107,6 +109,11 @@ class EntityManager implements EntityManagerInterface
     private Cache|null $cache = null;
 
     /**
+     * getReference() needs this.
+     */
+    private $identifierFlattener;
+
+    /**
      * Creates a new EntityManager that operates on the given database connection
      * and uses the given Configuration and EventManager implementations.
      *
@@ -146,6 +153,7 @@ class EntityManager implements EntityManagerInterface
                 $config->getAutoGenerateProxyClasses(),
             );
         }
+        $this->identifierFlattener = new IdentifierFlattener($this->unitOfWork, $this->metadataFactory);
 
         if ($config->isSecondLevelCacheEnabled()) {
             $cacheConfig  = $config->getSecondLevelCacheConfiguration();
@@ -400,7 +408,13 @@ class EntityManager implements EntityManagerInterface
             throw UnrecognizedIdentifierFields::fromClassAndFieldNames($class->name, array_keys($id));
         }
 
-        $entity = $this->unitOfWork->tryGetById($sortedId, $class->rootEntityName);
+        if ($class->containsForeignIdentifier) {
+            $flattenedId = $this->identifierFlattener->flattenIdentifier($class, $sortedId);
+        } else {
+            $flattenedId = $sortedId;
+        }
+
+        $entity = $this->unitOfWork->tryGetById($flattenedId, $class->rootEntityName);
 
         // Check identity map first, if its already in there just return it.
         if ($entity !== false) {
@@ -413,7 +427,7 @@ class EntityManager implements EntityManagerInterface
 
         $entity = $this->proxyFactory->getProxy($class->name, $sortedId);
 
-        $this->unitOfWork->registerManagedProxy($entity, $sortedId);
+        $this->unitOfWork->registerManagedProxy($entity, $flattenedId);
 
         return $entity;
     }
