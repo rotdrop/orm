@@ -28,6 +28,7 @@ use Doctrine\ORM\Query\ResultSetMapping;
 use Doctrine\ORM\Repository\RepositoryFactory;
 use Doctrine\Persistence\Mapping\MappingException;
 use Doctrine\Persistence\ObjectRepository;
+use OCA\CAFEVDB\Wrapped\Doctrine\ORM\Utility\IdentifierFlattener;
 use InvalidArgumentException;
 use Throwable;
 
@@ -147,6 +148,11 @@ use function sprintf;
     private $cache;
 
     /**
+     * getReference() needs this.
+     */
+    private $identifierFlattener;
+
+    /**
      * Creates a new EntityManager that operates on the given database connection
      * and uses the given Configuration and EventManager implementations.
      */
@@ -171,6 +177,7 @@ use function sprintf;
             $config->getProxyNamespace(),
             $config->getAutoGenerateProxyClasses()
         );
+        $this->identifierFlattener = new IdentifierFlattener($this->unitOfWork, $this->metadataFactory);
 
         if ($config->isSecondLevelCacheEnabled()) {
             $cacheConfig  = $config->getSecondLevelCacheConfiguration();
@@ -530,7 +537,13 @@ use function sprintf;
             throw UnrecognizedIdentifierFields::fromClassAndFieldNames($class->name, array_keys($id));
         }
 
-        $entity = $this->unitOfWork->tryGetById($sortedId, $class->rootEntityName);
+        if ($class->containsForeignIdentifier) {
+            $flattenedId = $this->identifierFlattener->flattenIdentifier($class, $sortedId);
+        } else {
+            $flattenedId = $sortedId;
+        }
+
+        $entity = $this->unitOfWork->tryGetById($flattenedId, $class->rootEntityName);
 
         // Check identity map first, if its already in there just return it.
         if ($entity !== false) {
@@ -543,7 +556,7 @@ use function sprintf;
 
         $entity = $this->proxyFactory->getProxy($class->name, $sortedId);
 
-        $this->unitOfWork->registerManaged($entity, $sortedId, []);
+        $this->unitOfWork->registerManaged($entity, $flattenedId, []);
 
         return $entity;
     }
