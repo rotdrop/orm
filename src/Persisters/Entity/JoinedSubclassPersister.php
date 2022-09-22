@@ -501,7 +501,7 @@ class JoinedSubclassPersister extends AbstractEntityInheritancePersister
     /**
      * {@inheritDoc}
      */
-    protected function getInsertColumnList()
+    protected function getInsertColumnList(bool $unquoted = false)
     {
         // Identifier columns must always come first in the column list of subclasses.
         $columns = $this->class->parentClasses
@@ -531,8 +531,9 @@ class JoinedSubclassPersister extends AbstractEntityInheritancePersister
                 $this->class->name !== $this->class->rootEntityName ||
                     ! $this->class->isIdGeneratorIdentity() || $this->class->identifier[0] !== $name
             ) {
-                $columns[]                = $this->quoteStrategy->getColumnName($name, $this->class, $this->platform);
-                $this->columnTypes[$name] = $this->class->fieldMappings[$name]['type'];
+                $fieldMapping = $this->class->fieldMappings[$name];
+                $columns[]                = $unquoted ? $fieldMapping['columnName'] : $this->quoteStrategy->getColumnName($name, $this->class, $this->platform);
+                $this->columnTypes[$name] = $fieldMapping['type'];
             }
         }
 
