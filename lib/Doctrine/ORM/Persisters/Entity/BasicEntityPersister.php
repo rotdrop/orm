@@ -273,7 +273,11 @@ class BasicEntityPersister implements EntityPersister
             if (isset($insertData[$tableName])) {
                 $paramIndex = 1;
 
-                foreach ($insertData[$tableName] as $column => $value) {
+                // this is the insert column list int the ordering used by getInsertSql()
+                $columns = array_unique($this->getInsertColumnList(true));
+
+                foreach ($columns as $column) {
+                    $value = $insertData[$tableName][$column];
                     $stmt->bindValue($paramIndex++, $value, $this->columnTypes[$column]);
                 }
             }
@@ -1496,10 +1500,12 @@ class BasicEntityPersister implements EntityPersister
      * Subclasses should override this method to alter or change the list of
      * columns placed in the INSERT statements used by the persister.
      *
+     * @param bool $unquoted Whether to return quoted or unquoted colums, defaults to \false.
+     *
      * @return string[] The list of columns.
      * @psalm-return list<string>
      */
-    protected function getInsertColumnList()
+    protected function getInsertColumnList(bool $unquoted = false)
     {
         $columns = [];
         $autoColumn = $this->class->isIdGeneratorIdentity() ? $this->class->identifier[0] : '';
@@ -1519,7 +1525,7 @@ class BasicEntityPersister implements EntityPersister
                 if ($assoc['isOwningSide'] && $assoc['type'] & ClassMetadata::TO_ONE) {
                     foreach ($assoc['joinColumns'] as $joinColumn) {
                         if ($autoColumn !== $joinColumn['name']) {
-                            $columns[] = $this->quoteStrategy->getJoinColumnName($joinColumn, $this->class, $this->platform);
+                            $columns[] = $unquoted ? $joinColumn['name'] : $this->quoteStrategy->getJoinColumnName($joinColumn, $this->class, $this->platform);
                         }
                     }
                 }
@@ -1528,12 +1534,13 @@ class BasicEntityPersister implements EntityPersister
             }
 
             if ($autoColumn !== $name) {
-                if (isset($this->class->fieldMappings[$name]['notInsertable'])) {
+                $fieldMapping = $this->class->fieldMappings[$name];
+                if (isset($fieldMapping['notInsertable'])) {
                     continue;
                 }
 
-                $columns[]                = $this->quoteStrategy->getColumnName($name, $this->class, $this->platform);
-                $this->columnTypes[$name] = $this->class->fieldMappings[$name]['type'];
+                $columns[]                = $unquoted ? $fieldMapping['columnName'] : $this->quoteStrategy->getColumnName($name, $this->class, $this->platform);
+                $this->columnTypes[$name] = $fieldMapping['type'];
             }
         }
 
