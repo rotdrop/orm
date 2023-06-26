@@ -12,6 +12,11 @@
         {"name": "Jonathan Wage", "email": "jonwage@gmail.com"},
         {"name": "Marco Pivetta", "email": "ocramius@gmail.com"}
     ],
+    "extra": {
+        "branch-alias": {
+            "dev-production/2.15.x/cafevdb": "2.15.x-dev"
+        }
+    },
     "config": {
         "allow-plugins": {
             "composer/package-versions-deprecated": true,
