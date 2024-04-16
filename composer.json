@@ -14,7 +14,8 @@
     ],
     "extra": {
         "branch-alias": {
-            "dev-production/2.19.x/cafevdb": "2.19.x-dev"
+            "dev-production/2.19.x/cafevdb": "2.19.x-dev",
+            "dev-production/2.20.x/cafevdb": "2.20.x-dev"
         }
     },
     "config": {
