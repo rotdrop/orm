@@ -14,6 +14,7 @@ use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\EntityRepository;
 use Doctrine\ORM\Internal\Hydration\AbstractHydrator;
 use Doctrine\ORM\Mapping\ClassMetadata;
+use Doctrine\Persistence\Mapping\ClassMetadata as PersistenceClassMetadata;
 use Doctrine\ORM\Mapping\ClassMetadataFactory;
 use Doctrine\ORM\NativeQuery;
 use Doctrine\ORM\Proxy\ProxyFactory;
@@ -47,7 +48,7 @@ abstract class EntityManagerDecorator extends ObjectManagerDecorator implements 
         return $this->wrapped->getMetadataFactory();
     }
 
-    public function getClassMetadata(string $className): ClassMetadata
+    public function getClassMetadata(string $className): PersistenceClassMetadata
     {
         return $this->wrapped->getClassMetadata($className);
     }
