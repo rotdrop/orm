@@ -15,6 +15,7 @@ use Doctrine\ORM\Proxy\ProxyFactory;
 use Doctrine\ORM\Query\Expr;
 use Doctrine\ORM\Query\FilterCollection;
 use Doctrine\ORM\Query\ResultSetMapping;
+use Doctrine\Persistence\Mapping\ClassMetadata as PersistenceClassMetadata;
 use Doctrine\Persistence\ObjectManager;
 
 interface EntityManagerInterface extends ObjectManager
@@ -237,5 +238,5 @@ interface EntityManagerInterface extends ObjectManager
      *
      * @phpstan-template T of object
      */
-    public function getClassMetadata(string $className): Mapping\ClassMetadata;
+    public function getClassMetadata(string $className): PersistenceClassMetadata;
 }
