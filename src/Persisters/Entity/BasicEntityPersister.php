@@ -1453,8 +1453,16 @@ class BasicEntityPersister implements EntityPersister
         $sqlTableAlias = $this->getSQLTableAlias($class->name, ($alias === 'r' ? '' : $alias));
 
         foreach ($assoc->joinColumns as $joinColumn) {
+            $resultColumnName = null;
+            if ($this->currentPersisterContext->rsm->hasColumnAliasByField($alias, $joinColumn->name)) {
+                $resultColumnName = $this->currentPersisterContext->rsm->getColumnAliasByField($alias, $joinColumn->name);
+            }
+            if ($resultColumnName === null) {
+                $resultColumnName = $this->getSQLColumnAlias($joinColumn->name);
+            }
+            // $resultColumnName = $this->getSQLColumnAlias($joinColumn->name);
+
             $quotedColumn     = $this->quoteStrategy->getJoinColumnName($joinColumn, $this->class, $this->platform);
-            $resultColumnName = $this->getSQLColumnAlias($joinColumn->name);
             $type             = PersisterHelper::getTypeOfColumn($joinColumn->referencedColumnName, $targetClass, $this->em);
 
             $this->currentPersisterContext->rsm->addMetaResult($alias, $resultColumnName, $joinColumn->name, $isIdentifier, $type);

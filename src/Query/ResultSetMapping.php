@@ -565,6 +565,11 @@ class ResultSetMapping
      * @param string      $columnName The name of the column in the SQL result set.
      * @param string      $fieldName  The name of the field on the declaring class.
      * @param string|null $type       The column type
+     * @param class-string|null $declaringClass The name of the class that declares/owns the specified field.
+     *                                          When $alias refers to a superclass in a mapped hierarchy but
+     *                                          the field $fieldName is defined on a subclass, specify that here.
+     *                                          If not specified, the field is assumed to belong to the class
+     *                                          designated by $alias.
      *
      * @return $this
      *
@@ -576,6 +581,7 @@ class ResultSetMapping
         string $fieldName,
         bool $isIdentifierColumn = false,
         string|null $type = null,
+        string|null $declaringClass = null,
     ): static {
         $this->metaMappings[$columnName]   = $fieldName;
         $this->columnOwnerMap[$columnName] = $alias;
@@ -587,6 +593,12 @@ class ResultSetMapping
         if ($type) {
             $this->typeMappings[$columnName] = $type;
         }
+
+        // field name => class name of declaring class
+        $declaringClass                      = $declaringClass ?: $this->aliasMap[$alias];
+        $this->declaringClasses[$columnName] = $declaringClass;
+
+        $this->columnAliasMappings[$declaringClass][$alias][$fieldName] = $columnName;
 
         return $this;
     }
