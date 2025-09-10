@@ -7,6 +7,11 @@
         "orm",
         "database"
     ],
+    "extra": {
+        "branch-alias": {
+            "dev-production/3.7.x/cafevdb": "3.7.x-dev"
+        }
+    },
     "authors": [
         {
             "name": "Guilherme Blanco",
