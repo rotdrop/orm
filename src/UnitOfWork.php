@@ -926,6 +926,8 @@ class UnitOfWork implements PropertyChangedListener
     private function persistNew(ClassMetadata $class, object $entity): void
     {
         $oid    = spl_object_id($entity);
+        // avoid a database lookup which just should yield an empty result.
+        $this->entityStates[$oid] = self::STATE_NEW;
         $invoke = $this->listenersInvoker->getSubscribedSystems($class, Events::prePersist);
 
         if ($invoke !== ListenersInvoker::INVOKE_NONE) {
