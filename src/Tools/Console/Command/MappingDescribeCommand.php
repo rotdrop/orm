@@ -72,7 +72,7 @@ The %command.full_name% command describes the metadata for the given full or par
 Or:
 
     <info>%command.full_name%</info> MyEntity
-    
+
 To output the metadata in JSON format, use the <info>--format</info> option:
   <info>%command.full_name% My\Namespace\Entity\MyEntity --format=json</info>
 
@@ -348,6 +348,12 @@ EOT);
 
         foreach ($propertyMappings as $propertyName => $mapping) {
             $output[] = $this->formatField(sprintf('  %s', $propertyName), '');
+            if (is_object($mapping)) {
+                $reflect = new \ReflectionClass($mapping);
+                $name = $reflect->getShortName();
+                $mapping = (array) $mapping;
+                $mapping['class'] = $name;
+            }
 
             foreach ((array) $mapping as $field => $value) {
                 $output[] = $this->formatField(sprintf('    %s', $field), $this->formatValue($value));
@@ -367,6 +373,12 @@ EOT);
         $output = [];
 
         foreach ($propertyMappings as $propertyName => $mapping) {
+            if (is_object($mapping)) {
+                $reflect = new \ReflectionClass($mapping);
+                $name = $reflect->getShortName();
+                $mapping = (array) $mapping;
+                $mapping['class'] = $name;
+            }
             $output[$propertyName] = $this->formatValueAsJson((array) $mapping);
         }
 
