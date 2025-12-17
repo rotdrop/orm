@@ -936,7 +936,10 @@ class SchemaTool
             }
 
             $blacklistedFks[$compositeName] = true;
-        } elseif (! isset($blacklistedFks[$compositeName])) {
+        } elseif (! isset($blacklistedFks[$compositeName])
+                  && (!isset($addedFks[$compositeName])
+                      || $foreignTableName !== $addedFks[$compositeName]['foreignTableName']
+                      || 0 !== count(array_diff($foreignColumns, $addedFks[$compositeName]['foreignColumns'])))) {
             // No existing FK and not blacklisted - add the new FK constraint
             // Store FK details including options that affect constraint identity
             $addedFks[$compositeName] = [
