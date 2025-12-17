@@ -1352,7 +1352,10 @@ class SchemaTool
             }
 
             $blacklistedFks[$compositeName] = true;
-        } elseif (! isset($blacklistedFks[$compositeName])) {
+        } elseif (! isset($blacklistedFks[$compositeName])
+                  && (!isset($addedFks[$compositeName])
+                      || $foreignTableName !== $addedFks[$compositeName]['foreignTableName']
+                      || 0 !== count(array_diff($foreignColumns, $addedFks[$compositeName]['foreignColumns'])))) {
             // No existing FK and not blacklisted - store FK metadata for application phase
             $addedFks[$compositeName] = [
                 'foreignTableName' => $foreignTableName,
