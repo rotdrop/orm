@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Doctrine\ORM\Query;
 
 use Doctrine\ORM\Internal\NoUnknownNamedArguments;
+use BackedEnum;
 use Traversable;
 
 use function implode;
@@ -542,7 +543,7 @@ class Expr
      *
      * @param scalar $literal Argument to be converted to literal.
      */
-    public function literal(bool|string|int|float $literal): Expr\Literal
+    public function literal(bool|string|int|float|BackedEnum $literal): Expr\Literal
     {
         return new Expr\Literal($this->quoteLiteral($literal));
     }
@@ -552,8 +553,12 @@ class Expr
      *
      * @param scalar $literal The literal value.
      */
-    private function quoteLiteral(bool|string|int|float $literal): string
+    private function quoteLiteral(bool|string|int|float|BackedEnum $literal): string
     {
+        if ($literal instanceof BackedEnum) {
+            $literal = $literal->value;
+        }
+
         if (is_int($literal) || is_float($literal)) {
             return (string) $literal;
         }
