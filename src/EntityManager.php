@@ -398,7 +398,7 @@ class EntityManager implements EntityManagerInterface
             throw UnrecognizedIdentifierFields::fromClassAndFieldNames($class->name, array_keys($id));
         }
 
-        if ($class->containsForeignIdentifier) {
+        if ($class->containsForeignIdentifier || $class->containsEnumIdentifier) {
             $flattenedId = $this->identifierFlattener->flattenIdentifier($class, $sortedId);
         } else {
             $flattenedId = $sortedId;
