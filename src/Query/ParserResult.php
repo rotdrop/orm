@@ -46,9 +46,43 @@ class ParserResult
      * Initializes a new instance of the <tt>ParserResult</tt> class.
      * The new instance is initialized with an empty <tt>ResultSetMapping</tt>.
      */
-    public function __construct()
-    {
+    public function __construct(
+        private string|int $hydrationMode,
+        private array $queryHints,
+    ) {
         $this->resultSetMapping = new ResultSetMapping();
+    }
+
+    /**
+     * Set the hydration mode active when this instance was filled with data.
+     */
+    public function setHydrationMode(string|int $hydrationMode): void
+    {
+        $this->hydrationMode = $hydrationMode;
+    }
+
+    /**
+     * Get the hydration mode active when this instance was filled with data.
+     */
+    public function getHydrationMode(): int|string
+    {
+        return $this->hydrationMode;
+    }
+
+    /**
+     * Set the query hints which were active when this instance was filled with data.
+     */
+    public function setQueryHints(array $queryHints): void
+    {
+        $this->queryHints = $queryHints;
+    }
+
+    /**
+     * Get the query hints which were active when this instance was filled with data.
+     */
+    public function getQueryHints(): array
+    {
+        return $this->queryHints;
     }
 
     /**
