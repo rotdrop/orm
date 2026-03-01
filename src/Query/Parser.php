@@ -179,7 +179,7 @@ final class Parser
     {
         $this->em           = $query->getEntityManager();
         $this->lexer        = new Lexer((string) $query->getDQL());
-        $this->parserResult = new ParserResult();
+        $this->parserResult = new ParserResult($query->getHydrationMode(), $query->getHints());
     }
 
     /**
@@ -381,6 +381,9 @@ final class Parser
             // @phpstan-ignore method.deprecated
             $this->parserResult->setSqlExecutor($executor);
         }
+
+        $this->parserResult->setHydrationMode($this->query->getHydrationMode());
+        $this->parserResult->setQueryHints($this->query->getHints());
 
         return $this->parserResult;
     }
