@@ -238,6 +238,12 @@ class Query extends AbstractQuery
                 // Cache hit.
                 $this->parserResult = $cached;
 
+                // A hack: Gedmo translatable likes to alter hydration mode
+                // and hints from within its Tree-walker, so restore them if
+                // we have a cache hit.
+                $this->hydrationMode = $this->parserResult->getHydrationMode();
+                $this->hints = $this->parserResult->getQueryHints();
+
                 return $this->parserResult;
             }
         }
